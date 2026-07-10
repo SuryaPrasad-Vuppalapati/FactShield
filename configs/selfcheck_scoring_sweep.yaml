@@ -1,0 +1,8 @@
+model_name: bart
+dataset: cnndm
+K: 5
+score_mode: all
+seed: 42
+wandb_run_name: task1_bart_cnndm_v1_k5
+hf_cache_repo: factshield-team/cache
+hf_results_repo: factshield-team/results

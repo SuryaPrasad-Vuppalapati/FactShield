@@ -1,0 +1,8 @@
+Week 1 Notes: Introduction to Deep Learning
+Deep learning is a subset of machine learning based on artificial neural networks. These neural networks are inspired by the structure and function of the human brain to learn patterns from vast amounts of data.
+
+Week 2 Notes: Gradient Descent Optimization
+Gradient descent is an optimization algorithm used to minimize the cost function or loss function in machine learning models. It works by iteratively updating the weights of the network in the direction of the steepest descent, defined by the negative gradient.
+
+Week 3 Notes: Training Neural Networks with Backpropagation
+Backpropagation (backward propagation of errors) is the central algorithm for training neural networks. It calculates the gradients of the loss function layer-by-layer using the chain rule, which allows the network to update its weights efficiently.

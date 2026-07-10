@@ -1,0 +1,21 @@
+/Users/s0o0rya/miniconda3/envs/fs_env/lib/python3.10/site-packages/pydub/utils.py:170: RuntimeWarning: Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work
+  warn("Couldn't find ffmpeg or avconv - defaulting to ffmpeg, but may not work", RuntimeWarning)
+/Users/s0o0rya/miniconda3/envs/fs_env/lib/python3.10/site-packages/torch/_utils.py:831: UserWarning: TypedStorage is deprecated. It will be removed in the future and UntypedStorage will be the only storage class. This should only matter to you if you are using storages directly.  To access UntypedStorage directly, use tensor.untyped_storage() instead of tensor.storage()
+  return self.fget.__get__(instance, owner)()
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.58it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.58it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.02it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.02it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.09it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.09it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.13it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.13it/s]
+SelfCheck-BERTScore initialized
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:11<00:00, 11.19s/it]Evaluating: 100%|██████████| 1/1 [00:11<00:00, 11.19s/it]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.82it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.82it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.84it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.84it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.98it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.97it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.17it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.17it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.18it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  2.18it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.96it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.96it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.82it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.82it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.04s/it]Evaluating: 100%|██████████| 1/1 [00:01<00:00,  1.04s/it]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.44it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.44it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.53it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.53it/s]
+Evaluating:   0%|          | 0/1 [00:00<?, ?it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.62it/s]Evaluating: 100%|██████████| 1/1 [00:00<00:00,  1.62it/s]

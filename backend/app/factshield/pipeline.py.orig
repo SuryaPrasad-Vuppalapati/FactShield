@@ -1,0 +1,321 @@
+"""Shared FactShield pipeline function.
+
+All 9 modes (5 student + 4 teacher) call run_factshield_pipeline() to obtain
+consistent entailment / consistency / confidence scores in one place.
+"""
+
+from __future__ import annotations
+
+from typing import Any
+
+from app.retrieval.cache import check_semantic_cache, save_to_semantic_cache
+from app.db.session import async_session_maker
+from app.models.generation import Generation
+
+from app.schemas.chat import ChatMessage
+
+from app.factshield.confidence import score_confidence
+from app.factshield.consistency import check_consistency
+from app.factshield.generation import generate_k_variants, generate_with_logprobs
+from app.factshield.grounding import check_grounding
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Per-mode system prompt builder
+# ────────────────────────────────────────────────────────────────────────────
+
+from app.factshield.prompts import build_prompt
+
+
+# ────────────────────────────────────────────────────────────────────────────
+# Shared pipeline runner
+# ────────────────────────────────────────────────────────────────────────────
+
+async def run_factshield_pipeline(
+    query: str,
+    mode: str,
+    role: str,
+    source_passage: str,
+    context: str | None = None,
+    skip_entailment: bool = False,
+    chat_history: list[ChatMessage] | None = None,
+    doc_ids: list[Any] | None = None,
+    fast_path: bool = False,
+) -> dict[str, Any]:
+    """Run all three FactShield pipelines with CAG and strict loop."""
+    import os
+    import numpy as _np
+    import pandas as _pd
+    from pipelines.token_prob.scorer import extract_features_vectorized as _efv
+    from pipelines.token_prob.classifier import FEATURE_COLS as _FC
+    _debug = os.getenv("DEBUG_PIPELINE", "0") == "1"
+
+    # Removed early exit: We want the Orchestrator loop to handle empty source_passages by pivoting to other tools!
+    # Step 1: Semantic Cache (CAG)
+    cached_gen = await check_semantic_cache(query, doc_ids, mode)
+    if cached_gen:
+        print(f"=== SEMANTIC CACHE HIT ===")
+        return {
+            "text": cached_gen.response_text,
+            "scores": {
+                "entailment": cached_gen.grounding_score >= 0.6 if not skip_entailment else None,
+                "consistency": cached_gen.consistency_score >= 0.5,
+                "confidence": cached_gen.confidence_score,
+            },
+            "role": role,
+            "mode": mode,
+        }
+
+    async def _run_verification_loop(v_prompt: str, v_source: str, v_skip_entailment: bool, v_fallback_type: str | None = None):
+        MAX_RETRIES = 1 if fast_path else 3
+        best_candidate = None
+        best_combined_score = -1.0
+        
+        for attempt in range(MAX_RETRIES):
+            if _debug: print(f"--- Attempt {attempt+1}/{MAX_RETRIES} (Fallback: {v_fallback_type}) ---")
+            
+            gen = await generate_with_logprobs(v_prompt, chat_history)
+            if gen["text"] == "AI_SERVICE_UNAVAILABLE":
+                return {
+                    "text": "AI_SERVICE_UNAVAILABLE",
+                    "scores": {"entailment": False, "consistency": False, "confidence": 0.0, "fallback_type": v_fallback_type},
+                    "role": role,
+                    "mode": mode,
+                }
+
+            if fast_path:
+                consistency_score = 1.0
+                consistency_bool = True
+                lr_signal = 1.0
+                prob_bool = True
+                entailment_bool = True
+                grounding_score = 1.0
+                confidence = 1.0
+            else:
+                import asyncio
+                # OPTIMIZED: Run Pipeline 1 and 3 in parallel using asyncio.to_thread
+                async def _run_p1():
+                    if v_skip_entailment: return 1.0
+                    # OPTIMIZED: Truncate inputs for MiniCheck speed
+                    return await asyncio.to_thread(check_grounding, v_source[:500], gen["text"][:200])
+                    
+                async def _run_p3():
+                    return await asyncio.to_thread(score_confidence, gen["token_logprobs"], gen["seq_len"])
+
+                grounding_score, lr_p_hall = await asyncio.gather(_run_p1(), _run_p3())
+                
+                lr_signal = float(_np.clip(1.0 - lr_p_hall, 0.1, 0.9))
+                prob_bool = lr_p_hall < 0.5
+                
+                if v_skip_entailment:
+                    entailment_bool = None
+                else:
+                    entailment_bool = grounding_score >= 0.6
+
+                # OPTIMIZED: Fast-fail strategy - Only run slow Pipeline 2 if P1 and P3 pass
+                if (entailment_bool is False) or (not prob_bool):
+                    consistency_score = 0.0
+                    consistency_bool = False
+                else:
+                    # Note: k is already optimized to 2 in generation.py
+                    variants = await generate_k_variants(v_prompt, chat_history=chat_history)
+                    other_samples = [v for v in variants if v != gen["text"]]
+                    if not other_samples:
+                        other_samples = variants[:1] if variants else [gen["text"]]
+
+                    consistency_score = await asyncio.to_thread(check_consistency, gen["text"], other_samples)
+                    consistency_bool = consistency_score >= 0.5
+
+            if v_skip_entailment:
+                confidence = float(0.60 * consistency_score + 0.40 * lr_signal)
+            else:
+                confidence = float(0.40 * grounding_score + 0.35 * consistency_score + 0.25 * lr_signal)
+
+            candidate = {
+                "text": gen["text"],
+                "token_logprobs": gen["token_logprobs"],
+                "seq_len": gen["seq_len"],
+                "scores": {
+                    "entailment": entailment_bool,
+                    "consistency": consistency_bool,
+                    "confidence": confidence,
+                    "fallback_type": v_fallback_type,
+                },
+                "raw_scores": {
+                    "grounding": grounding_score,
+                    "consistency": consistency_score,
+                    "lr_signal": lr_signal,
+                }
+            }
+
+            passed_entailment = v_skip_entailment or entailment_bool
+            passed_consistency = consistency_bool
+            passed_prob = prob_bool
+
+            if passed_entailment and passed_consistency and passed_prob:
+                best_candidate = candidate
+                if _debug: print("-> STRICT PASS! Breaking loop.")
+                break
+            
+            if confidence > best_combined_score:
+                best_combined_score = confidence
+                best_candidate = candidate
+
+        return best_candidate
+
+    prompt = build_prompt(query, mode, role, source_passage, context)
+    best_failed_candidate = None
+    best_failed_score = -1.0
+    
+    # Helper to track the best failed candidate
+    def _track_failed(cand):
+        nonlocal best_failed_candidate, best_failed_score
+        if cand and cand["text"] != "AI_SERVICE_UNAVAILABLE":
+            conf = cand["scores"]["confidence"]
+            if conf > best_failed_score:
+                best_failed_score = conf
+                best_failed_candidate = cand
+
+    # --- MCP Orchestrator Loop ---
+    import os
+    import json
+    from google import genai
+    from app.factshield.tools import search_document, search_arxiv, search_copilot, search_web
+
+    failed_tools = []
+    available_tools = {
+        "search_document": search_document,
+        "search_arxiv": search_arxiv,
+        "search_copilot": search_copilot,
+        "search_web": search_web
+    }
+
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    
+    while len(failed_tools) < len(available_tools):
+        # 1. Ask Orchestrator for the next tool
+        orchestrator_prompt = (
+            f"The student asked: '{query}'.\n"
+            f"You are the Multi-Agent Orchestrator. You have these tools available to search for context: {list(available_tools.keys())}.\n"
+            f"These tools have already failed: {failed_tools}.\n"
+            "Which tool should we call next? Always try 'search_document' first, then 'search_arxiv', then 'search_copilot', then 'search_web'.\n"
+            "Return ONLY a valid JSON object like: {\"tool\": \"tool_name\"} or {\"tool\": \"none\"} if all logical tools are exhausted."
+        )
+        
+        try:
+            resp = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=orchestrator_prompt
+            )
+            # Parse the JSON response
+            raw_text = resp.text.strip().removeprefix("```json").removesuffix("```").strip()
+            decision = json.loads(raw_text)
+            tool_name = decision.get("tool", "none")
+        except Exception as e:
+            print(f"Orchestrator JSON Error: {e}")
+            tool_name = "none"
+
+        if tool_name == "none" or tool_name not in available_tools:
+            break
+
+        if tool_name in failed_tools:
+            # Prevent infinite loops if LLM is stubborn
+            break
+
+        # 2. Execute the Tool
+        if tool_name == "search_document":
+            snippet = source_passage
+        else:
+            tool_func = available_tools[tool_name]
+            snippet = await tool_func(query)
+        
+        if snippet:
+            # Setup specific prompt based on tool
+            if tool_name == "search_document":
+                current_prompt = prompt # Use the standard document prompt
+                current_mode = mode
+                is_general = skip_entailment
+            elif tool_name == "search_arxiv":
+                current_prompt = (
+                    f"The user asked: '{query}'. \n"
+                    f"Here are abstracts from academic research papers on ArXiv:\n{snippet}\n"
+                    "Provide a highly accurate answer based on these academic papers. "
+                    "FORMATTING: Provide a rich, step-by-step educational answer. If there are math formulas, you MUST format them using LaTeX.\n"
+                    "CITATION: The very last line of your response MUST STRICTLY be a clickable markdown link: `Reference: [Paper Title](URL)`."
+                )
+                current_mode = "academic"
+                is_general = False
+            elif tool_name == "search_copilot":
+                current_prompt = (
+                    f"The user asked: '{query}'. \n"
+                    f"Here is a technical snippet from the Copilot AI Knowledge Base:\n{snippet}\n"
+                    "Provide a helpful technical answer based on this snippet. "
+                    "FORMATTING: Provide a rich, step-by-step educational answer. If there are math formulas, you MUST format them using LaTeX.\n"
+                    "CITATION: The very last line of your response MUST STRICTLY be: `Reference: [Copilot](https://copilot.microsoft.com)`."
+                )
+                current_mode = "copilot"
+                is_general = False
+            elif tool_name == "search_web":
+                current_prompt = (
+                    f"The user asked: '{query}'. \n"
+                    f"Here are search results from the web:\n{snippet}\n"
+                    "Provide a helpful answer based on these web search results. "
+                    "FORMATTING: Provide a rich, step-by-step educational answer. If there are math formulas, you MUST format them using LaTeX.\n"
+                    "CITATION: The very last line of your response MUST STRICTLY be a clickable markdown link: `Reference: [Site Name](URL)`."
+                )
+                current_mode = "web"
+                is_general = False
+
+            # 3. CRITICAL: Pass the snippet to the Core FactShield 3-Layer Pipeline
+            cand = await _run_verification_loop(current_prompt, snippet, is_general, current_mode)
+            
+            if cand:
+                s = cand["scores"]
+                # Document RAG allows entailment fallback to None, but external tools require strict entailment
+                passed_all = (s["entailment"] is not False) and (s["consistency"] is not False)
+                if passed_all:
+                    # Success! FactShield has verified the Orchestrator's tool output.
+                    if tool_name == "search_document":
+                        from app.db.session import async_session_maker
+                        from app.models.generation import Generation
+                        from app.retrieval.cache import save_to_semantic_cache
+                        async with async_session_maker() as session:
+                            db_gen = Generation(
+                                prompt=current_prompt,
+                                response_text=cand["text"],
+                                token_logprobs=cand.get("token_logprobs", b""),
+                                seq_len=cand.get("seq_len", 10),
+                                grounding_score=cand.get("raw_scores", {}).get("grounding", 0.0),
+                                consistency_score=cand.get("raw_scores", {}).get("consistency", 0.0),
+                                confidence_score=cand["scores"]["confidence"],
+                                combined_score=cand["scores"]["confidence"],
+                            )
+                            session.add(db_gen)
+                            await session.commit()
+                            await save_to_semantic_cache(query, doc_ids, mode, db_gen.id)
+                    return {"text": cand["text"], "scores": cand["scores"], "role": role, "mode": current_mode}
+                else:
+                    _track_failed(cand)
+        
+        # 4. Validation Failed or Snippet Empty -> Inform Orchestrator to try another tool
+        failed_tools.append(tool_name)
+
+    # --- Attempt 5: Dynamic Synthesizer Refusal ---
+    # If all searches fail to provide an entailed answer, we use the Orchestrator Pattern to generate a contextual refusal.
+    refusal_prompt = (
+        f"The student asked: '{query}'. \n"
+        "You searched their syllabus, ArXiv academic papers, and the live internet, but found no verifiable information. "
+        "Politely explain to the student that there are no available verifiable sources in these areas to answer their question, "
+        "and ask if they can provide more context or rephrase. Keep it under 3 sentences. "
+        "Do NOT attempt to answer the question."
+    )
+    # We just need 1 variant for the refusal message. No entailment or consistency checks needed.
+    refusal_responses, _ = await generate_k_variants(refusal_prompt, k=1)
+    refusal_text = refusal_responses[0] if refusal_responses else "No available source in all these areas."
+
+    return {
+        "text": refusal_text,
+        "scores": {"entailment": False, "consistency": False, "confidence": 0.0, "fallback_type": "refusal"},
+        "role": role,
+        "mode": mode,
+    }

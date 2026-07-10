@@ -1,0 +1,1 @@
+The Nernst equation is E = E° + (RT/nF) ln(Q). It is used to calculate the cell potential of an electrochemical cell under non-standard conditions. Photosynthesis occurs primarily in the leaves.

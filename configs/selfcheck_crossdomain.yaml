@@ -1,0 +1,7 @@
+model_name: bart
+dataset: xsum
+K: 5
+score_mode: nli
+seed: 42
+hf_cache_repo: factshield-team/cache
+hf_results_repo: factshield-team/results
