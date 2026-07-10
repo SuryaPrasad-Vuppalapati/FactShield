@@ -1,0 +1,105 @@
+@import "./styles/tokens.css";
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+a:hover {
+  opacity: 0.85;
+}
+
+button {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+input, textarea, select {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  background-color: var(--color-bg-chat);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 400;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(212, 83, 126, 0.15);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+}
+
+::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Animations (Muted flat transitions) */
+@keyframes pulse-glow-warning {
+  0%, 100% {
+    border-color: var(--color-border);
+  }
+  50% {
+    border-color: var(--color-warning);
+  }
+}
+
+@keyframes pulse-glow-success {
+  0%, 100% {
+    border-color: var(--color-border);
+  }
+  50% {
+    border-color: var(--color-success);
+  }
+}
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-loading {
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-chat) 25%,
+    var(--color-bg-hover) 50%,
+    var(--color-bg-chat) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.5s infinite linear;
+}

@@ -1,0 +1,36 @@
+/* frontend/src/styles/tokens.css */
+
+:root {
+  /* Exact Claude.ai-themed Color Specifications */
+  --color-bg-base: #f5f4ef;
+  --color-bg-sidebar: #eeede8;
+  --color-bg-chat: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-border-darker: rgba(0, 0, 0, 0.15);
+  
+  /* Accent color (blue) used for active states, send button, logo icon, selected mode */
+  --color-accent: #378ADD;
+  --color-accent-light: #e6f1fb;
+  
+  /* Text styling */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #6b6b6b;
+  --color-text-muted: #9b9b9b;
+  
+  /* Alert statuses */
+  --color-success: #1d9e75;
+  --color-success-bg: #e1f5ee; /* matching light green bg for chips */
+  
+  --color-warning: #ba7517;
+  --color-warning-bg: #fffcf4;
+  
+  --color-danger: #e24b4a;
+  --color-danger-bg: #fff5f5;
+
+  /* User Message */
+  --color-bg-user-msg: #f0efe9;
+
+  /* Typography */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Consolas, Monaco, monospace;
+}
