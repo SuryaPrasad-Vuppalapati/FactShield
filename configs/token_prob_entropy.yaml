@@ -1,0 +1,6 @@
+model_name: bart
+dataset: cnndm
+seed: 42
+features: [mean_entropy, max_entropy, tail_mean_nll]
+hf_cache_repo: factshield-team/cache
+hf_results_repo: factshield-team/results

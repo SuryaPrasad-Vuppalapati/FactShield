@@ -1,0 +1,6 @@
+model_name: bart
+dataset: cnndm
+methods: [alignscore]
+seed: 42
+hf_cache_repo: factshield-team/cache
+hf_results_repo: factshield-team/results

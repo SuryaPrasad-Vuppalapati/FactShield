@@ -1,0 +1,27 @@
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+mypy_path = ".."
+
+[[tool.mypy.overrides]]
+module = ["pandas", "joblib", "sklearn.*", "minicheck.*", "huggingface_hub.*", "google.*", "pgvector.*", "sentence_transformers.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pipelines.*"
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

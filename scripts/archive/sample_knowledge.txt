@@ -1,0 +1,2 @@
+The Backpropagation algorithm calculates the gradient of the loss function with respect to the weights of the neural network. It uses the chain rule to recursively compute gradients for each layer.
+Overfitting occurs when a machine learning model learns the training data too well, capturing noise and details that do not generalize to unseen data. Regularization methods like dropout, weight decay, and early stopping help mitigate overfitting.
