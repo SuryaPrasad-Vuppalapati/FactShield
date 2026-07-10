@@ -110,7 +110,7 @@ def generate_k_samples(model, tokenizer, dataset, model_name, dataset_name, K=10
             samples.append(tokenizer.decode(out[0], skip_special_tokens=True))
         row = {'doc_id': str(sample[id_key])}
         for k, s in enumerate(samples):
-            row[f'summary_k{k+1}'] = s
+            row[f'summary_k{k + 1}'] = s
         results.append(row)
         if i % 100 == 0 and i > 0:
             Dataset.from_list(results).push_to_hub(

@@ -1,6 +1,6 @@
 import urllib.request
 import json
-import uuid
+
 
 def upload_dummy_doc(content: str, filename: str):
     url = "http://localhost:8000/api/v1/documents/upload"
@@ -34,6 +34,7 @@ def upload_dummy_doc(content: str, filename: str):
         print(f"Upload failed: {e}")
         return None
 
+
 def test_summary(doc_id):
     url = "http://localhost:8000/api/v1/student/best-scored-summary"
     data = {
@@ -53,15 +54,19 @@ def test_summary(doc_id):
         print(f"Summary failed: {e}")
         return None
 
+
 # Upload biology doc
-bio_id = upload_dummy_doc("Biology is the study of life. It encompasses cellular biology, genetics, and ecology. Animals and plants are studied.", "biology.txt")
+bio_id = upload_dummy_doc(
+    "Biology is the study of life. It encompasses cellular biology, genetics, and ecology. Animals and plants are studied.",  # noqa: E501
+    "biology.txt")
 print("Bio ID:", bio_id)
 if bio_id:
     print("Bio Summary:", test_summary(bio_id))
 
 # Upload math doc
-math_id = upload_dummy_doc("Mathematics includes algebra, calculus, and geometry. Numbers and formulas are fundamental.", "math.txt")
+math_id = upload_dummy_doc(
+    "Mathematics includes algebra, calculus, and geometry. Numbers and formulas are fundamental.",
+    "math.txt")
 print("Math ID:", math_id)
 if math_id:
     print("Math Summary:", test_summary(math_id))
-

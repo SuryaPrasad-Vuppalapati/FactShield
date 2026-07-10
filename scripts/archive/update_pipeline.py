@@ -32,7 +32,7 @@ new_func = '''async def run_factshield_pipeline(
 
     if query == "REJECTED_CONTEXT_DO_NOT_SEARCH" or source_passage == "No grounding passage found.":
         return {
-            "text": "I couldn't find a clear answer to that in your document. Try rephrasing or check if this topic is covered in your notes.",
+            "text": "I couldn't find a clear answer to that in your document. Try rephrasing or check if this topic is covered in your notes.",  # noqa: E501
             "scores": {"entailment": False, "consistency": False, "confidence": 0.0},
             "role": role,
             "mode": mode,
@@ -59,10 +59,10 @@ new_func = '''async def run_factshield_pipeline(
     MAX_RETRIES = 3
     best_candidate = None
     best_combined_score = -1.0
-    
+
     for attempt in range(MAX_RETRIES):
         if _debug: print(f"--- Attempt {attempt+1}/{MAX_RETRIES} ---")
-        
+
         gen = await generate_with_logprobs(prompt, chat_history)
         if gen["text"] == "OLLAMA_NOT_RUNNING":
             return {
@@ -124,7 +124,7 @@ new_func = '''async def run_factshield_pipeline(
             best_candidate = candidate
             if _debug: print("-> STRICT PASS! Breaking loop.")
             break
-        
+
         if confidence > best_combined_score:
             best_combined_score = confidence
             best_candidate = candidate
@@ -145,7 +145,7 @@ new_func = '''async def run_factshield_pipeline(
     if s["consistency"] is False: passed_all = False
     # we don't have prob_bool in scores, but we can check if it passed perfectly
     # actually, we'll save to cache if it's the one that broke the loop.
-    
+
     # Save Generation and Semantic Cache
     if passed_all:
         async with async_session_maker() as session:
@@ -161,7 +161,7 @@ new_func = '''async def run_factshield_pipeline(
             )
             session.add(db_gen)
             await session.commit()
-            
+
             # Save to semantic cache
             await save_to_semantic_cache(query, doc_ids, db_gen.id)
 
@@ -191,4 +191,3 @@ if match:
     print("Replaced run_factshield_pipeline successfully.")
 else:
     print("Could not find run_factshield_pipeline.")
-

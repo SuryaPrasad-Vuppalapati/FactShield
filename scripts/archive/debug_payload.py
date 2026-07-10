@@ -18,4 +18,3 @@ except Exception as e:
     print(f"Error: {e}")
     if hasattr(e, 'read'):
         print(f"Body: {e.read().decode('utf-8')}")
-

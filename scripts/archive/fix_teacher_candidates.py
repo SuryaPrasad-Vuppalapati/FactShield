@@ -1,4 +1,3 @@
-import re
 
 with open('backend/app/api/v1/teacher.py', 'r') as f:
     content = f.read()
@@ -25,15 +24,15 @@ new_logic = """
     all_candidates = []
     for result in results:
         if result["text"] == "AI_SERVICE_UNAVAILABLE":
-            return JSONResponse(status_code=503, content={"error": True, "response": "The Hugging Face Inference API is currently unavailable."})
-        
+            return JSONResponse(status_code=503, content={"error": True, "response": "The Hugging Face Inference API is currently unavailable."})  # noqa: E501
+
         s = result["scores"]
         ent_score = 1.0 if s["entailment"] else 0.0
         con_score = 1.0 if s["consistency"] else 0.0
         conf_score = s["confidence"]
-        
+
         combined = (ent_score * 0.4) + (con_score * 0.4) + (conf_score * 0.2)
-        
+
         candidate = CandidateScore(
             text=result["text"],
             grounding=ent_score,
@@ -57,7 +56,8 @@ new_logic = """
     )
 """
 
-start_idx = content.find('    result = await run_factshield_pipeline(\n        query=search_query,\n        mode="explain_concept"')
+start_idx = content.find(
+    '    result = await run_factshield_pipeline(\n        query=search_query,\n        mode="explain_concept"')
 end_idx = content.find('    return BestScoredSummaryResponse(', start_idx)
 end_idx = content.find(')', end_idx) + 1
 

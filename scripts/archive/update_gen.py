@@ -27,7 +27,7 @@ client = AsyncInferenceClient(token=HF_TOKEN)
 async def generate_response(prompt: str, chat_history: list[ChatMessage] | None = None) -> str:
     \"\"\"Single response — used by all modes\"\"\"
     messages = []
-    
+
     # Add previous turns for context
     if chat_history:
         for msg in chat_history[-4:]:  # last 4 turns max
@@ -35,7 +35,7 @@ async def generate_response(prompt: str, chat_history: list[ChatMessage] | None 
                 "role": msg.role,
                 "content": msg.content
             })
-            
+
     # Add current message
     messages.append({"role": "user", "content": prompt})
 
@@ -49,14 +49,14 @@ async def generate_response(prompt: str, chat_history: list[ChatMessage] | None 
         return response.choices[0].message.content
     except Exception as e:
         err_msg = str(e).lower()
-        if "rate limit" in err_msg or "unauthorized" in err_msg or "connection" in err_msg or "timeout" in err_msg or "unavailable" in err_msg:
+        if "rate limit" in err_msg or "unauthorized" in err_msg or "connection" in err_msg or "timeout" in err_msg or "unavailable" in err_msg:  # noqa: E501
             return "AI_SERVICE_UNAVAILABLE"
         raise e
 
 async def generate_with_logprobs(prompt: str, chat_history: list[ChatMessage] | None = None) -> dict:
     \"\"\"Generate one response and simulate log-probabilities for the LR classifier.\"\"\"
     text = await generate_response(prompt, chat_history)
-    
+
     if text == "AI_SERVICE_UNAVAILABLE":
         # Pass the error string through, we'll check it in the route handlers
         return {
@@ -100,7 +100,7 @@ async def generate_k_variants(prompt: str, k: int = 4, chat_history: list[ChatMe
 
     tasks = [_generate_single_variant(messages) for _ in range(k)]
     variants = await asyncio.gather(*tasks)
-    
+
     return list(variants)
 """
 

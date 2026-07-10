@@ -1,9 +1,10 @@
+from app.factshield.generation import generate_response, HF_TOKEN
 import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('backend'))
-from app.factshield.generation import generate_response, HF_TOKEN, client
+
 
 async def main():
     print(f"HF_TOKEN is {'set' if HF_TOKEN else 'NOT set'}")

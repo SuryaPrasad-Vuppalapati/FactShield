@@ -2,7 +2,6 @@ with open("frontend/src/lib/api.ts", "r") as f:
     content = f.read()
 
 # I messed up the file with the previous replace. I will rewrite api.ts correctly.
-import re
 
 new_content = """/**
  * Typed API client for calling FactShield backend routes.
