@@ -1,5 +1,4 @@
 import urllib.request
-import json
 
 url = "http://localhost:8000/api/v1/documents/upload"
 boundary = '----WebKitFormBoundary7MA4YWxkTrZu0gW'

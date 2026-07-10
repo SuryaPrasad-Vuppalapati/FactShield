@@ -1,9 +1,10 @@
+from app.factshield.pipeline import run_factshield_pipeline
 import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('backend'))
-from app.factshield.pipeline import run_factshield_pipeline
+
 
 async def main():
     res = await run_factshield_pipeline(

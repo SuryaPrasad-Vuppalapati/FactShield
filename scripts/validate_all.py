@@ -90,7 +90,7 @@ def _check_classifier():
 
 check('task3_classifier.pkl', _check_classifier)
 
-print(f"\n{'='*40}")
+print(f"\n{'=' * 40}")
 print(f"Results: {passed} passed, {failed} failed")
 if failed == 0:
     print("All validation checks passed.")

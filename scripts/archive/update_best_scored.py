@@ -1,4 +1,3 @@
-import re
 
 with open("backend/app/factshield/best_scored.py", "r") as f:
     content = f.read()

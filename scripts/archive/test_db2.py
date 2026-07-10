@@ -1,11 +1,12 @@
+from sqlalchemy import select
+from app.models.generation import Generation
+from app.db.session import async_session_maker
 import asyncio
 import os
 import sys
 
 sys.path.insert(0, os.path.abspath('backend'))
-from app.db.session import async_session_maker
-from app.models.generation import Generation
-from sqlalchemy import select
+
 
 async def main():
     async with async_session_maker() as session:

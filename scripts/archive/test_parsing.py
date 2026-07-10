@@ -1,8 +1,8 @@
+from app.retrieval.parsing import extract_text_from_file
 import sys
 import os
 
 sys.path.insert(0, os.path.abspath('backend'))
-from app.retrieval.parsing import extract_text_from_file
 
 with open('readme.pdf', 'rb') as f:
     file_bytes = f.read()

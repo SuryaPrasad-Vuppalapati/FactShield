@@ -1,6 +1,5 @@
 import urllib.request
 import json
-import uuid
 
 # First, get a document id
 url_docs = "http://localhost:8000/api/v1/documents"
