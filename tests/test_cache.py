@@ -11,6 +11,8 @@ from datasets import load_dataset
 from huggingface_hub import login
 
 load_dotenv()
+if not os.environ.get('HF_TOKEN'):
+    pytest.skip("HF_TOKEN not set", allow_module_level=True)
 login(token=os.environ['HF_TOKEN'])
 
 MODELS = ['bart', 't5', 'pegasus']
